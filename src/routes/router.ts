@@ -1,6 +1,9 @@
 import express from "express";
 import Course from "../models/Course";
-import { getCourseMetadata } from "../lib/loadGithubRepository";
+import {
+  parseCourseMetadata,
+  parseCourseRepository,
+} from "../lib/loadGithubRepository";
 import { v4 as uuid } from "uuid";
 
 const router = express.Router();
@@ -22,7 +25,7 @@ router.get("/courses", (req, res) => {
 
 router.get("/repo_test/:user/:repo", (req, res) => {
   const { user, repo } = req.params;
-  getCourseMetadata(user + "/" + repo)
+  parseCourseRepository(user + "/" + repo)
     .then((data) => {
       res.json(data);
     })
@@ -35,7 +38,7 @@ router.get("/repo_test/:user/:repo", (req, res) => {
 router.post("/course", async (req, res) => {
   const repo = req.body.repo;
 
-  const metadata = await getCourseMetadata(repo);
+  const metadata = await parseCourseMetadata(repo);
 
   const user = new Course({
     ...metadata,

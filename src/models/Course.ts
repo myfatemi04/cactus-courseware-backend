@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
+import { ModuleType } from "./Module";
 
 export interface CourseType {
   id: string;
   title: string;
   markdown: string;
   tags: string[];
-  // modules: Module[];
+  rootModule: ModuleType;
   thumbnail: string;
   authors: string;
 }
