@@ -1,41 +1,28 @@
 import express from 'express'
 import Course from '../models/Course';
+import { v4 as uuid } from 'uuid';
 
 const router = express.Router()
-router.use(express.json());
 
 router.get('/', (req, res) => {
   return res.send('CourseWare API')
 })
 
 router.post('/course', async (req, res) => {
+  const gh = req.body.githubUrl;
+
   const user = new Course({
-    id: {
-      type: String,
-      required: true
-    },
-    title: {
-      type: String,
-      required: true
-    },
-    tags: [{
-      type: String
-    }],
-    thumbnail: {
-      type: String
-    },
-    authors: [{
-      type: String
-    }],
-    markdown: {
-      type: String,
-      required: true
-    }
+    id: uuid(),
+    title: gh,
+    tags: ['math', 'highschool'],
+    thumbnail: '',
+    authors: ['Jane Doe', 'Joe Bo'],
+    markdown: '## Test',
+    rootModuleId: 'random id'
   });
   
   try {
     await user.save();
-    res.send(user);
   } catch (error) {
     return res.status(500).json({
       "message": error
