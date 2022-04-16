@@ -35,12 +35,12 @@ router.get("/repo_test/:user/:repo", (req, res) => {
 router.post("/course", async (req, res) => {
   const repo = req.body.repo;
 
-  const metadata = getCourseMetadata(repo);
+  const metadata = await getCourseMetadata(repo);
 
   const user = new Course({
-    id: uuid(),
     ...metadata,
     rootModuleId: "random id",
+    id: uuid(),
   });
 
   try {
