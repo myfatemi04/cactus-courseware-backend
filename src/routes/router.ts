@@ -15,12 +15,8 @@ router.get("/", (req, res) => {
 
 router.get("/courses", (req, res) => {
   Course.find()
-    .then((courses) => {
-      return res.json(courses);
-    })
-    .catch((err) => {
-      return res.status(500).json(err);
-    });
+    .then((courses) => res.json(courses))
+    .catch((err) => res.status(500).json(err));
 });
 
 router.get("/repo_test/:user/:repo", (req, res) => {

@@ -140,25 +140,5 @@ export async function parseCourseRepository(
     },
   };
 
-  // for (const file of root.sort((a, b) => a.name.localeCompare(b.name))) {
-  //   if (file.type === "dir") {
-  //     // Unit Directories
-  //     if (/\d+_/.test(file.name)) {
-  //       course.modules.push({
-  //         ...(await parseUnitDirectory(repo, file.path)),
-  //         id: uuid(),
-  //       });
-  //     }
-  //   } else if (file.type === "file") {
-  //     // Unit Files
-  //     if (/\d+_/.test(file.name)) {
-  //       course.modules.push({
-  //         ...(await parseUnitFile(repo, file.path)),
-  //         id: uuid(),
-  //       });
-  //     }
-  //   }
-  // }
-
   return course;
 }
