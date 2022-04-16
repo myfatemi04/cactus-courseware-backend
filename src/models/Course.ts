@@ -1,11 +1,4 @@
 import mongoose from 'mongoose'
-// id: string (“user/repo”)
-// title: string
-// markdown: string
-// tags: string[]
-// modules: Module[] ← Parsed from repository content
-// thumbnail: string ← Parsed from md
-// authors: string ← Parsed from md
 
 const CourseSchema = new mongoose.Schema({
   id: {
@@ -25,7 +18,7 @@ const CourseSchema = new mongoose.Schema({
   authors: [{
     type: String
   }],
-  markdown: {
+  rootModuleId: {
     type: String,
     required: true
   }

@@ -1,6 +1,5 @@
 import express from 'express'
 import Course from '../models/Course';
-import mongoose from 'mongoose';
 
 const router = express.Router()
 router.use(express.json());
@@ -10,7 +9,6 @@ router.get('/', (req, res) => {
 })
 
 router.post('/course', async (req, res) => {
-  console.log(req.body)
   const user = new Course({
     id: {
       type: String,
