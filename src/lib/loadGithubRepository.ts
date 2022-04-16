@@ -1,32 +1,7 @@
 import { CourseType } from "../models/Course";
-import fetch from "node-fetch";
-import { GithubFileResponse, GithubFolderResponse } from "./githubTypes";
 import { ModuleType } from "../models/Module";
 import { v4 as uuid } from "uuid";
-
-export async function getGithubFolderContent(
-  repo: string,
-  path: string
-): Promise<GithubFolderResponse> {
-  const url = `https://api.github.com/repos/${repo}/contents/${path}`;
-  const response = await fetch(url);
-  const json = await response.json();
-  return json;
-}
-
-export async function getGithubFileText(
-  repo: string,
-  path: string
-): Promise<string> {
-  const response = (await (
-    await fetch(`https://api.github.com/repos/${repo}/contents/${path}`)
-  ).json()) as GithubFileResponse;
-
-  const content = response.content.replace(/\n/g, "");
-  const text = Buffer.from(content, "base64").toString("ascii");
-
-  return text;
-}
+import { getGithubFileText, getGithubFolderContent } from "./githubLoader";
 
 export async function parseCourseMetadata(
   repo: string
@@ -70,7 +45,7 @@ export async function parseUnitFile(
   path: string
 ): Promise<Omit<ModuleType, "id">> {
   // Parses a file, such as "01_Strings.md"
-  const fileName = path.slice(path.lastIndexOf("/") + 1);
+  const fileName = path.match(/(?<=\/)\w+(?=.md)/)![0];
   const unitNumber = fileName.slice(0, fileName.indexOf("_"));
   const unitName = fileName.slice(fileName.indexOf("_") + 1).replace(/_/g, " ");
   const content = await getGithubFileText(repo, path);

@@ -35,22 +35,23 @@ router.post("/course", async (req, res) => {
   const repo = req.body.repo;
 
   const metadata = await parseCourseMetadata(repo);
+  const course = await parseCourseRepository(repo);
 
-  const user = new Course({
-    ...metadata,
-    rootModuleId: "random id",
-    id: uuid(),
-  });
+  // const user = new Course({
+  //   ...metadata,
+  //   rootModuleId: "random id",
+  //   id: uuid(),
+  // });
 
   try {
-    await user.save();
+    // await user.save();
   } catch (error) {
     return res.status(500).json({
       message: error,
     });
   }
 
-  return res.status(200).json({ user });
+  return res.status(200).json({ course: course });
 });
 
 export default router;
