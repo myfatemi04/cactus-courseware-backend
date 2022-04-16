@@ -10,6 +10,16 @@ router.get("/", (req, res) => {
   return res.send("CourseWare API");
 });
 
+router.get("/courses", (req, res) => {
+  Course.find()
+    .then((courses) => {
+      return res.json(courses);
+    })
+    .catch((err) => {
+      return res.status(500).json(err);
+    });
+});
+
 router.get("/repo_test/:user/:repo", (req, res) => {
   const { user, repo } = req.params;
   getCourseMetadata(user + "/" + repo)
@@ -23,15 +33,13 @@ router.get("/repo_test/:user/:repo", (req, res) => {
 });
 
 router.post("/course", async (req, res) => {
-  const gh = req.body.githubUrl;
+  const repo = req.body.repo;
+
+  const metadata = getCourseMetadata(repo);
 
   const user = new Course({
     id: uuid(),
-    title: gh,
-    tags: ["math", "highschool"],
-    thumbnail: "",
-    authors: ["Jane Doe", "Joe Bo"],
-    markdown: "## Test",
+    ...metadata,
     rootModuleId: "random id",
   });
 
@@ -43,9 +51,7 @@ router.post("/course", async (req, res) => {
     });
   }
 
-  return res.status(200).json({
-    user: user,
-  });
+  return res.status(200).json({ user });
 });
 
 export default router;
