@@ -4,7 +4,7 @@ import { ModuleType } from "./Module";
 export interface CourseType {
   id: string;
   title: string;
-  markdown: string;
+  description: string;
   tags: string[];
   rootModule: ModuleType;
   thumbnail: string;
@@ -19,6 +19,10 @@ const CourseSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
+  },
+  description: {
+    type: String,
+    required: true
   },
   tags: [
     {

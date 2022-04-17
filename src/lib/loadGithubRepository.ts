@@ -10,6 +10,7 @@ export async function parseCourseMetadata(
   try {
     text = await getGithubFileText(repo, "ocw.json");
   } catch (e) {
+    console.log(e)
     throw new Error("Could not find ocw.json");
   }
 
@@ -18,15 +19,15 @@ export async function parseCourseMetadata(
     tags: string[];
     thumbnail: string;
     authors: string;
+    description: string;
   };
-  const markdown = await getGithubFileText(repo, "README.md");
 
   return {
     title: metadata.title,
     tags: metadata.tags,
     thumbnail: metadata.thumbnail,
     authors: metadata.authors,
-    markdown,
+    description: metadata.description
   };
 
   /*

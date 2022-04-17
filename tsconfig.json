@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "ES5", "ES6", "DOM", "DOM.Iterable"],
     "outDir": "./dist",
     "esModuleInterop": true,
     "strict": true

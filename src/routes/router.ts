@@ -1,5 +1,8 @@
+import { ModuleType } from './../models/Module';
 import express from "express";
-import Course from "../models/Course";
+import Course, { CourseType } from "../models/Course";
+import Module from '../models/Module';
+
 import {
   parseCourseMetadata,
   parseCourseRepository,
@@ -31,27 +34,72 @@ router.get("/repo_test/:user/:repo", (req, res) => {
     });
 });
 
+router.delete('/course/:id', async (req, res) => {
+  const { id } = req.params;
+  const course = await Course.findOneAndDelete({id: id});
+  const rootModuleId = course.rootModuleId;
+
+  const deleteModule = async (moduleId: string) => {
+    const moduleDoc = await Module.findOneAndDelete({id: moduleId})
+    if(moduleDoc != null){
+      for(let childId of moduleDoc.childrenIds){
+        await deleteModule(childId);
+      }
+    }
+    return moduleDoc;
+  };
+
+  await deleteModule(rootModuleId);
+  return res.status(200).json({
+    course: course
+  })
+})
+
 router.post("/course", async (req, res) => {
   const repo = req.body.repo;
+  const course: Omit<CourseType, "id"> = await parseCourseRepository(repo);
 
-  const metadata = await parseCourseMetadata(repo);
-  const course = await parseCourseRepository(repo);
+  const makeModule = async (module: ModuleType) => {
+    const { children, ...rest} = module;
 
-  // const user = new Course({
-  //   ...metadata,
-  //   rootModuleId: "random id",
-  //   id: uuid(),
-  // });
+    const moduleDoc = new Module({
+      ...rest,
+      childrenIds: children.map((child: ModuleType) => child.id)
+    })
+    await moduleDoc.save();
+
+    for(let mod of children){
+      await makeModule(mod);
+    }
+    return moduleDoc;
+  };
+
+  await makeModule(course.rootModule);
+
+  const courseDoc = new Course({
+    id: uuid(),
+    title: course.rootModule.title,
+    description: course.description,
+    tags: course.tags,
+    thumbnail: course.thumbnail,
+    authors: course.authors,
+    rootModuleId: course.rootModule.id,
+  })
 
   try {
-    // await user.save();
+    await courseDoc.save();
   } catch (error) {
     return res.status(500).json({
       message: error,
     });
   }
 
-  return res.status(200).json({ course: course });
+  return res.status(200).json({
+    course: {
+      ...course,
+      id: courseDoc.id
+    }
+  });
 });
 
 export default router;
