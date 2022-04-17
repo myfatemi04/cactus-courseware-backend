@@ -47,14 +47,15 @@ export async function parseUnitFile(
   path: string
 ): Promise<Omit<ModuleType, "id">> {
   // Parses a file, such as "01_Strings.md"
-  const fileName = path.match(/(?<=\/)\w+(?=.md)/)![0];
+  const [_, fileName, fileType] = path.match(/(?<=\/)(\w+)(.md|.ipynb)/)!;
   const unitNumber = fileName.slice(0, fileName.indexOf("_"));
   const unitName = fileName.slice(fileName.indexOf("_") + 1).replace(/_/g, " ");
   const content = await getGithubFileText(repo, path);
 
   return {
     title: unitName,
-    markdown: content,
+    content,
+    type: fileType === ".md" ? "markdown" : "jupyter",
     children: [],
   };
 }
@@ -65,7 +66,8 @@ export async function parseUnitDirectory(
 ): Promise<Omit<ModuleType, "id">> {
   const module: Omit<ModuleType, "id"> = {
     title: "",
-    markdown: "",
+    content: "",
+    type: "markdown",
     children: [],
   };
 
@@ -76,7 +78,20 @@ export async function parseUnitDirectory(
     .slice(folderName.indexOf("_") + 1)
     .replace(/_/g, " ");
 
-  module.markdown = await getGithubFileText(repo, path + "/index.md");
+  try {
+    module.content = await getGithubFileText(repo, path + "/index.md");
+    module.type = "markdown";
+  } catch (e) {
+    // No index.md
+  }
+
+  try {
+    module.content = await getGithubFileText(repo, path + "/index.ipynb");
+    module.type = "jupyter";
+  } catch (e) {
+    // No index.ipynb
+  }
+
   module.title = unitName;
 
   for (const file of folder.sort((a, b) => a.name.localeCompare(b.name))) {
@@ -89,7 +104,8 @@ export async function parseUnitDirectory(
     } else if (file.type === "file") {
       // Unit Files
       if (file.name === "index.md") {
-        module.markdown = await getGithubFileText(repo, file.path);
+        module.content = await getGithubFileText(repo, file.path);
+        module.type = "markdown";
       } else {
         if (/\d+_/.test(file.name)) {
           module.children.push({

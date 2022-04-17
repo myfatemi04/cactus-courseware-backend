@@ -11,7 +11,8 @@ export interface ModuleType {
   id: string;
   children: ModuleType[];
   title: string;
-  markdown: string;
+  content: string;
+  type: "markdown" | "jupyter";
 }
 
 const ModuleSchema = new mongoose.Schema({
@@ -28,7 +29,10 @@ const ModuleSchema = new mongoose.Schema({
       type: String,
     },
   ],
-  markdown: {
+  content: {
+    type: String,
+  },
+  type: {
     type: String,
     required: true,
   },

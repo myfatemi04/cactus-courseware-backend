@@ -29,10 +29,21 @@ router.post("/", async (req, res) => {
   }
 
   const repo = req.body.repo;
+  // @ts-ignore
   const course: CourseType = {
     id: uuid(),
-    ...(await parseCourseRepository(repo)),
   };
+
+  try {
+    Object.assign(course, await parseCourseRepository(repo));
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      error: "Could not parse course repository",
+    });
+    return;
+  }
+
   await deconstructModule(course.rootModule);
 
   const { rootModule, ...rest } = course;
