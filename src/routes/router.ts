@@ -4,7 +4,7 @@ import course from './course'
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  return res.send("CourseWare API");
+  return res.send("Cacti Courseware API");
 });
 
 router.use('/course', course)

@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
   const {rootModule, ...rest} = course;
   const courseDoc = new Course({
     ...rest,
-    id: rootModule.id
+    rootModuleId: rootModule.id
   })
 
   try {
@@ -39,31 +39,52 @@ router.post("/", async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
-  const course = await Course.findOneAndDelete({id: id});
-  const rootModuleId = course.rootModuleId;
-
-  await deleteModule(rootModuleId);
-  return res.status(200).json({
-    course: course
-  })
+  try {
+    const course = await Course.findOneAndDelete({id: id});
+    const rootModuleId = course.rootModuleId;
+    await deleteModule(rootModuleId);
+    
+    return res.status(200).json({
+      course: course
+    })
+  } catch(e) {
+    return res.status(500).json({
+      message: `Invalid course id: ${id}`,
+      error: e
+    })
+  }
 })
 
 router.get('/:id', async (req, res) => {
   const {id} = req.params;
+  try {
+    const courseDoc = await Course.findOne({id: id});
+    const rootModule = await constructModule(courseDoc.rootModuleId);
 
-  const courseDoc = await Course.findOne({id: id});
-  const rootModule = await constructModule(courseDoc.rootModuleId);
+    const {rootModuleId, ...rest} = destructureDocument(courseDoc);
 
-  const {rootModuleId, ...rest} = destructureDocument(courseDoc);
+    const course: CourseType = {
+      ...rest,
+      rootModule: rootModule
+    };
 
-  const course: CourseType = {
-    ...rest,
-    rootModule: rootModule
-  };
+    return res.status(200).json({
+      course: course
+    })
+  } catch(e) {
+    return res.status(500).json({
+      message: `Invalid course id: ${id}`,
+      error: e
+    })
+  }
+})
 
+router.get('/', async (req, res) => {
+  const courses = await Course.find()
   return res.status(200).json({
-    course: course
+    courses: courses
   })
 })
+
 
 export default router;
