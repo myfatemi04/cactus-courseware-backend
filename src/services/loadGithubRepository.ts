@@ -13,7 +13,7 @@ export async function parseCourseMetadata(
     console.log(e);
     throw new Error("Could not find ocw.json");
   }
-
+  
   const metadata = JSON.parse(text) as {
     title: string;
     tags: string[];

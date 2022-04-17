@@ -26,10 +26,11 @@ export async function getGithubFileText(
     }
   }
 
-  const response = (await (
+  const response:any = await (
     await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, options)
-  ).json()) as GithubFileResponse;
-
+  ).json();
+  if(response.message && response.message == 'Not Found') return '';
+  
   const content = response.content.replace(/\n/g, "");
   const text = Buffer.from(content, "base64").toString("ascii");
   return text;
