@@ -15,6 +15,19 @@ import destructureDocument from "../services/destructureDocument";
 const router = express.Router();
 
 router.post("/", async (req, res) => {
+  const existingCourse = await Course.findOne({
+    repoUrl: req.body.repo,
+  });
+
+  console.log(existingCourse);
+
+  if (existingCourse !== null) {
+    res.status(400).json({
+      error: "Course already uploaded",
+    });
+    return;
+  }
+
   const repo = req.body.repo;
   const course: CourseType = {
     id: uuid(),

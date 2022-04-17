@@ -6,6 +6,7 @@ export interface CourseType {
   title: string;
   description: string;
   tags: string[];
+  repoUrl: string;
   rootModule: ModuleType;
   thumbnail: string;
   authors: string;
@@ -16,13 +17,17 @@ const CourseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  repoUrl: {
+    type: String,
+    required: true,
+  },
   title: {
     type: String,
     required: true,
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   tags: [
     {
