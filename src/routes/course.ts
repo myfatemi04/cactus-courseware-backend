@@ -1,7 +1,7 @@
-import { ModuleType } from "./../models/Module";
 import express from "express";
 import Course, { CourseType } from "../models/Course";
 import Module from "../models/Module";
+import { ModuleType } from "./../models/Module";
 
 import { parseCourseRepository } from "../services/loadGithubRepository";
 import { v4 as uuid } from "uuid";
@@ -66,6 +66,23 @@ router.post("/", async (req, res) => {
       id: courseDoc.id,
     },
   });
+});
+
+router.post("/url", async (req, res) => {
+  const existingCourse = await Course.findOne({
+    repoUrl: req.body.repo,
+  });
+
+  if (existingCourse === null) {
+    return res.status(500).json({
+      message: `Invalid course url: ${req.body.repo}`,
+    });
+  }
+  else {
+    return res.status(200).json({
+      course: existingCourse,
+    });
+  }
 });
 
 router.delete("/:id", async (req, res) => {
