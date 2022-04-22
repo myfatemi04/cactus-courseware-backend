@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Structure } from "../services/githubTypes";
 import { ModuleType } from "./Module";
 
 export interface CourseType {
@@ -10,6 +11,7 @@ export interface CourseType {
   rootModule: ModuleType;
   thumbnail: string;
   authors: string;
+  structure: Structure;
 }
 
 const CourseSchema = new mongoose.Schema({

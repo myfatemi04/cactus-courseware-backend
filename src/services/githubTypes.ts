@@ -1,3 +1,7 @@
+export interface Structure {
+  title: string;
+  children: Structure[];
+}
 export interface GithubFolderItem {
   name: string;
   path: string;

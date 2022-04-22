@@ -2,6 +2,7 @@ import { CourseType } from "../models/Course";
 import { ModuleType } from "../models/Module";
 import { v4 as uuid } from "uuid";
 import { getGithubFileText, getGithubFolderContent } from "./githubLoader";
+import { GithubFolderResponse, Structure } from "./githubTypes";
 
 export async function parseCourseMetadata(
   repo: string
@@ -20,8 +21,10 @@ export async function parseCourseMetadata(
     thumbnail: string;
     authors: string;
     description: string;
+    structure: Structure
   };
 
+  // possibly pragramatic access of non-existant fields
   return {
     repoUrl: repo,
     title: metadata.title,
@@ -29,35 +32,113 @@ export async function parseCourseMetadata(
     thumbnail: metadata.thumbnail,
     authors: metadata.authors,
     description: metadata.description,
+    structure: metadata.structure,
   };
-
-  /*
-  id: string;
-  title: string;
-  markdown: string;
-  tags: string[];
-  // modules: Module[];
-  thumbnail: string;
-  authors: string;
-  */
 }
 
 export async function parseUnitFile(
   repo: string,
-  path: string
+  path: string,
+  underscores=true
 ): Promise<Omit<ModuleType, "id">> {
   // Parses a file, such as "01_Strings.md"
-  const [_, fileName, fileType] = path.match(/(?<=\/)(\w+)(.md|.ipynb)/)!;
-  const unitNumber = fileName.slice(0, fileName.indexOf("_"));
-  const unitName = fileName.slice(fileName.indexOf("_") + 1).replace(/_/g, " ");
-  const content = await getGithubFileText(repo, path);
+  const match = path.match(/(?<=\/)(\w+)(.md|.ipynb)/)!;
+  if (match === null) {
+    return {
+      title: "",
+      content: "",
+      type: "markdown",
+      children: []
+    };
+  }
 
+  const [_, fileName, fileType] = match;
+  let unitName: string;
+  if (underscores === true) {
+    console.log("SUS")
+    unitName = fileName.slice(fileName.indexOf("_") + 1).replace(/_/g, " ");
+  }
+  else {
+    console.log("NO SUS")
+    unitName = fileName;
+  }
+  const content = await getGithubFileText(repo, path);
   return {
     title: unitName,
     content,
     type: fileType === ".md" ? "markdown" : "jupyter",
     children: [],
   };
+}
+
+export async function parseUnitDirectoryWithStructure(
+  repo: string,
+  path: string,
+  structure: Structure
+): Promise<Omit<ModuleType, "id">> {
+  const module: Omit<ModuleType, "id"> = {
+    title: "",
+    content: "",
+    type: "markdown",
+    children: [],
+  };
+
+  const folder = await getGithubFolderContent(repo, path);
+  // folder name starts after last slash, i.e content/01_Strings/ -> 01_Strings
+  const folderName = path.slice(path.lastIndexOf("/") + 1);
+  const unitName = folderName
+
+  try {
+    const result = await getGithubFileText(repo, path + "/index.md");
+    module.content = result !== "" ? result : module.content;
+    module.type = result !== "" ? "markdown" : module.type;
+  } catch (e) {
+    // No index.md
+  }
+
+  try {
+    const result = await getGithubFileText(repo, path + "/index.ipynb");
+    module.content = result !== "" ? result : module.content;
+    module.type = result !== "" ? "jupyter" : module.type;
+  } catch (e) {
+    // No index.ipynb
+  }
+
+  module.title = unitName;
+
+  // sort based on order in structure
+  const childrenTitles = structure.children.map(child => child.title);
+  const filteredFolder = folder.filter(child => (childrenTitles.includes(child.name) || child.name === structure.title));
+  const sortedFolder = filteredFolder.sort((a, b) => childrenTitles.indexOf(a.name) - childrenTitles.indexOf(b.name));
+  for (const file of sortedFolder) {
+    if (file.type === "dir") {
+        module.children.push({
+          ...(await parseUnitDirectoryWithStructure(repo, file.path, structure.children[childrenTitles.indexOf(file.name)])),
+          id: uuid(),
+        });
+      }
+    else if (file.type === "file") {
+      // Unit Files
+      console.log("I'm a file")
+      console.log(file.path)
+      if (file.name === "index.md") {
+        module.content = await getGithubFileText(repo, file.path);
+        module.type = "markdown";
+      } else {
+        // 
+        if (file.name) {
+          const unitFile = await parseUnitFile(repo, file.path, false)
+          if (unitFile.title !== "") {
+            module.children.push({
+              ...(unitFile),
+              id: uuid(),
+            });
+          }
+        }
+      }
+    }
+  }
+  return module;
 }
 
 export async function parseUnitDirectory(
@@ -128,7 +209,7 @@ export async function parseCourseRepository(
   const course: Omit<CourseType, "id"> = {
     ...metadata,
     rootModule: {
-      ...(await parseUnitDirectory(repo, "content")),
+      ...(metadata.structure == undefined ? await parseUnitDirectory(repo, "content") : await parseUnitDirectoryWithStructure(repo, "content", metadata.structure)),
       id: uuid(),
     },
   };
