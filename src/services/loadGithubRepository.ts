@@ -200,6 +200,5 @@ export async function parseCourseRepository(
       id: uuid(),
     },
   };
-  console.log(course);
   return course;
 }
