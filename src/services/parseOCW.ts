@@ -85,6 +85,9 @@ export function parseOCW(text: string) {
     const structureStrings = [lines[0], ...nonEmptyLines.filter(line => line.includes("*"))];
     const metadataStrings = nonEmptyLines.filter(line => !structureStrings.includes(line));
     const structure = parseStructure(structureStrings);
-    const data = parseData(metadataStrings);
+    const data = {
+      ...parseData(metadataStrings),
+      title: lines[0]
+    }
     return {data, structure};
 }
