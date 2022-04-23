@@ -31,7 +31,6 @@ export async function getGithubFileText(
   ).json();
   if(response.message && response.message == 'Not Found') return '';
   
-  const content = response.content.replace(/\n/g, "");
-  const text = Buffer.from(content, "base64").toString("ascii");
+  const text = Buffer.from(response.content, "base64").toString("ascii");
   return text;
 }
