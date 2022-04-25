@@ -10,7 +10,6 @@ export interface CourseType {
   repoUrl: string;
   rootModule: ModuleType;
   thumbnail: string;
-  authors: string;
   structure: Structure;
 }
 

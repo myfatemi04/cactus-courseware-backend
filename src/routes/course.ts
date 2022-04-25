@@ -19,8 +19,6 @@ router.post("/", async (req, res) => {
     repoUrl: req.body.repo,
   });
 
-  console.log(existingCourse);
-
   if (existingCourse !== null) {
     res.status(400).json({
       error: "Course already uploaded",

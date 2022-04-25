@@ -3,37 +3,28 @@ import { ModuleType } from "../models/Module";
 import { v4 as uuid } from "uuid";
 import { getGithubFileText, getGithubFolderContent } from "./githubLoader";
 import { GithubFolderResponse, Structure } from "./githubTypes";
+import { parseOCW } from "./parseOCW";
 
-export async function parseCourseMetadata(
-  repo: string
-): Promise<Omit<CourseType, "rootModule" | "id">> {
+export async function parseCourseData(repo: string) {
   let text: string;
   try {
-    text = await getGithubFileText(repo, "ocw.json");
+    text = await getGithubFileText(repo, "ocw.txt");
   } catch (e) {
     console.log(e);
-    throw new Error("Could not find ocw.json");
+    throw new Error("Could not find ocw.txt");
   }
-  
-  const metadata = JSON.parse(text) as {
-    title: string;
-    tags: string[];
-    thumbnail: string;
-    authors: string;
-    description: string;
-    structure: Structure
-  };
 
-  // possibly pragramatic access of non-existant fields
-  return {
+  const { data, structure } = parseOCW(text);
+  const metadata = {
     repoUrl: repo,
-    title: metadata.title,
-    tags: metadata.tags,
-    thumbnail: metadata.thumbnail,
-    authors: metadata.authors,
-    description: metadata.description,
-    structure: metadata.structure,
-  };
+    title: data.title,
+    tags: data.tags,
+    thumbnail: data.thumbnail,
+    description: data.description,
+    structure: structure
+  }
+
+  return metadata;
 }
 
 export async function parseUnitFile(
@@ -55,11 +46,9 @@ export async function parseUnitFile(
   const [_, fileName, fileType] = match;
   let unitName: string;
   if (underscores === true) {
-    console.log("SUS")
     unitName = fileName.slice(fileName.indexOf("_") + 1).replace(/_/g, " ");
   }
   else {
-    console.log("NO SUS")
     unitName = fileName;
   }
   const content = await getGithubFileText(repo, path);
@@ -119,8 +108,6 @@ export async function parseUnitDirectoryWithStructure(
       }
     else if (file.type === "file") {
       // Unit Files
-      console.log("I'm a file")
-      console.log(file.path)
       if (file.name === "index.md") {
         module.content = await getGithubFileText(repo, file.path);
         module.type = "markdown";
@@ -204,7 +191,7 @@ export async function parseUnitDirectory(
 export async function parseCourseRepository(
   repo: string
 ): Promise<Omit<CourseType, "id">> {
-  const metadata = await parseCourseMetadata(repo);
+  const metadata = await parseCourseData(repo);
   const root = await getGithubFolderContent(repo, "content");
   const course: Omit<CourseType, "id"> = {
     ...metadata,
@@ -213,6 +200,5 @@ export async function parseCourseRepository(
       id: uuid(),
     },
   };
-
   return course;
 }
